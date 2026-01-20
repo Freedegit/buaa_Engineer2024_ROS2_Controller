@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mujoco.h"
-#include "glfw3.h"
+#include <mujoco/mujoco.h>
+#include <GLFW/glfw3.h>
 
 extern mjModel* m ;                  // MuJoCo model
 extern mjData* d;                   // MuJoCo data

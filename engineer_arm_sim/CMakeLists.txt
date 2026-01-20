@@ -23,7 +23,7 @@ find_package(rclcpp REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-set(MUJOCO_ROOT_DIR "$ENV{HOME}/.mujoco/mujoco210")
+set(MUJOCO_ROOT_DIR "$ENV{HOME}/mujoco-2.3.6")
 option(USE_GL "Use Mujoco with OpenGL" ON)
 set(MUJOCO_BIN_DIR "${MUJOCO_ROOT_DIR}/bin")
 set(MUJOCO_INCLUDE_DIR "${MUJOCO_ROOT_DIR}/include")
@@ -34,20 +34,19 @@ endif()
 set(MUJOCO_LIB_DIR "${MUJOCO_ROOT_DIR}/lib")
 set(MUJOCO_SAMPLE_DIR "${MUJOCO_ROOT_DIR}/sample")
 set(MUJOCO_SIMULATE_DIR "${MUJOCO_ROOT_DIR}/simulate")
-message("${MUJOCO_INCLUDE_DIR}")
-message(STATUS "MuJoCo root dir: " ${MUJOCO_ROOT_DIR})
+
 
 set(OpenGL_GL_PREFERENCE "GLVND")
 
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(engineer_msg REQUIRED)
-
-file(GLOB MUJOCO_LIBS "${MUJOCO_BIN_DIR}/*.so")
-file(GLOB MUJOCO_LIBS_GL "${MUJOCO_BIN_DIR}/*.so.3")
-
-include_directories(include)
+find_package(Eigen3 REQUIRED)
+file(GLOB MUJOCO_LIBS "${MUJOCO_LIB_DIR}/libmujoco.so")
+file(GLOB MUJOCO_LIBS_GL "${MUJOCO_LIB_DIR}/libmujoco.so.2.3.6")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${MUJOCO_INCLUDE_DIR})
  
 if(BUILD_TESTING)
@@ -66,14 +65,18 @@ add_executable(sim
                   src/drv_math.cpp
                   src/alg_pid.cpp
                   src/ROS2_controller_thread.cpp 
-                  src/sim.cpp)
+                  src/sim.cpp
+                  src/InverseKinematics.cpp)
 ament_target_dependencies(sim rclcpp ament_index_cpp engineer_msg)
 # add_dependencies(sim ROS2_controller_thread alg_pid drv_math)
+link_directories(${MUJOCO_LIB_DIR})
 target_link_libraries(sim 
                         ${MUJOCO_LIBS} 
                         ${MUJOCO_LIBS_GL} 
                         ${OPENGL_LIBRARIES} 
                         ${GLEW_LIBRARIES} 
+                        glfw
+                        Eigen3::Eigen
                         # ROS2_controller_thread
                         # alg_pid
                         # drv_math

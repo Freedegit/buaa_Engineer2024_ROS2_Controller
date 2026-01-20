@@ -18,7 +18,8 @@ def generate_launch_description():
     )
     # 创建LaunchDescription对象launch_description,用于描述launch文件
     launch_description = LaunchDescription(
-        [sim, controller, communication])
+        # [sim, controller, communication])
+        [sim, controller])
     # 返回让ROS2根据launch描述执行节点
     return launch_description
 

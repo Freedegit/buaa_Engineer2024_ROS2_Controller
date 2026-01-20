@@ -1,2 +1,5 @@
 .vscode/
+build/
+install/
+log/
 MUJOCO_LOG.TXT

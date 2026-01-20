@@ -2,7 +2,8 @@
 #include "engineer_arm_sim/ROS2_controller_thread.hpp"
 //include multi-threading library
 #include <thread>
-
+#include"engineer_arm_sim/InverseKinematics.h"
+#include"engineer_arm_sim/ForwardKinematics.h"
 
 // MuJoCo data structures
 mjModel* m = NULL;                  // MuJoCo model
@@ -89,13 +90,15 @@ void scroll(GLFWwindow* window, double xoffset, double yoffset)
 
 int main(int argc, char **argv)
 {
-
+    puts("MuJoCo simulation started");
     // Initialize MuJoCo
     // mj_activate("your_license_key_path");
     std::string xml_path = ament_index_cpp::get_package_share_directory("engineer_arm_sim") + "/mjcf/engineer_arm.xml";
     const char* xml_path_cstr = xml_path.c_str();
     m = mj_loadXML(xml_path_cstr, NULL, NULL, NULL);
     d = mj_makeData(m);
+    mj_resetDataKeyframe(m, d, 0);
+    mj_forward(m, d);
 
     // // Set simulation time step
     // model->opt.timestep = 0.001;
@@ -134,14 +137,24 @@ int main(int argc, char **argv)
     //create a ROS2 controller thread
     std::thread ROS2_controller_thread(ROS2_controller_thread_func);
     ROS2_controller_thread.detach();
+    // ============ 初始化 position actuator target = 当前关节角 ============
+for(int i = 0; i < m->nu; i++)
+{
+    int joint_id = m->actuator_trnid[2*i];      // actuator -> joint
+    int qpos_adr = m->jnt_qposadr[joint_id];    // joint -> qpos index
+    d->ctrl[i] = d->qpos[qpos_adr];
+}
 
     while ( !glfwWindowShouldClose(window) ) {
         mjtNum simstart = d->time;
+        endeffector_control_keyboard(window);
+        endeffector_controller(m, d);
         // advance interactive simulation for 1/30 sec
         //  Assuming MuJoCo can simulate faster than real-time, which it usually can,
         //  this loop will finish on time for the next frame to be rendered at 30 fps.
         //  Otherwise add a cpu timer and exit this loop when it is time to render.
         while( d->time - simstart < 1.0/30.0 ){
+    
             mj_step(m, d);
         }
         // get framebuffer viewport
@@ -169,7 +182,7 @@ int main(int argc, char **argv)
     // Clean up
     mj_deleteData(d);
     mj_deleteModel(m);
-    mj_deactivate();
+    mj_resetData(m,d);
 
     rclcpp::shutdown();
 
