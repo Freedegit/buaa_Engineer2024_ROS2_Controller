@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define delta 1e-2
+#define delta 3e-2
 #define thelta 1e-4
 #include<stdbool.h>
 #include <iostream> 
