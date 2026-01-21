@@ -124,7 +124,6 @@ void pos_control(const mjModel* m, mjData* d){
     // if (count % 1000 == 0) {
     //     target_pos[4] += 1.0f;
     // }
-    printf("!\n");
     for (int i = 0; i < 6; i++) {
         d->qpos[m->jnt_qposadr[i]] = target_pos[i];
     }

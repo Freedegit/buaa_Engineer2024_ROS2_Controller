@@ -6,7 +6,9 @@ def generate_launch_description():
     """launch内容描述函数，由ros2 launch 扫描调用"""
     sim = Node(
         package="engineer_arm_sim",
-        executable="sim"
+        executable="sim",
+        output='screen',   # ⭐⭐⭐ 加这一行
+        emulate_tty=True,  # ⭐⭐⭐ 建议一起加
     )
     controller = Node(
         package="engineer_arm_controller",

@@ -27,8 +27,16 @@ void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
     // backspace: reset simulation
     if( act==GLFW_PRESS && key==GLFW_KEY_BACKSPACE )
     {
-        mj_resetData(m, d);
+        // mj_resetDataKeyframe(m, d, 0);   // ✅ 回到 home pose
         mj_forward(m, d);
+        mj_resetData(m,d);
+        // 顺便重新同步 ctrl
+        for(int i = 0; i < m->nu; i++)
+        {
+            int joint_id = m->actuator_trnid[2*i];
+            int qpos_adr = m->jnt_qposadr[joint_id];
+            d->ctrl[i] = d->qpos[qpos_adr];
+        }
     }
 }
 
@@ -97,7 +105,7 @@ int main(int argc, char **argv)
     const char* xml_path_cstr = xml_path.c_str();
     m = mj_loadXML(xml_path_cstr, NULL, NULL, NULL);
     d = mj_makeData(m);
-    mj_resetDataKeyframe(m, d, 0);
+    // mj_resetDataKeyframe(m, d, 0);
     mj_forward(m, d);
 
     // // Set simulation time step
@@ -135,8 +143,8 @@ int main(int argc, char **argv)
     glfwSetScrollCallback(window, scroll);
 
     //create a ROS2 controller thread
-    std::thread ROS2_controller_thread(ROS2_controller_thread_func);
-    ROS2_controller_thread.detach();
+    //std::thread ROS2_controller_thread(ROS2_controller_thread_func);
+    //ROS2_controller_thread.detach();
     // ============ 初始化 position actuator target = 当前关节角 ============
 for(int i = 0; i < m->nu; i++)
 {

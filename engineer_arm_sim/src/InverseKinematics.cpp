@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define delta 3e-3
+#define delta 1e-2
 #define thelta 1e-4
 #include<stdbool.h>
 #include <iostream> 
@@ -61,7 +61,7 @@ MatrixXd JacobianMatrix(const mjModel* m, mjData* d)
 	MatrixXd J(6, 6);
 	for (int j = 0; j < 6; ++j) {
 		int id = qvel_ids[j];
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < 3; ++i) { 
 			J(i, j) = jacp[i * m->nv + id];
 			J(i + 3, j) = jacr[i * m->nv + id];
 		}
@@ -174,6 +174,6 @@ void endeffector_controller(const mjModel* m, mjData* d)
 	v2= M * (keyboard_to_direction());
 	for(int i=0;i<6;i++){
 		q_des[i]+=delta*v2(i);
-		d->qpos[i]=q_des[i];
+		d->ctrl[i]=q_des[i];
 	}
 }
