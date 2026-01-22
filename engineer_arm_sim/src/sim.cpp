@@ -31,12 +31,12 @@ void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
         mj_forward(m, d);
         mj_resetData(m,d);
         // 顺便重新同步 ctrl
-        for(int i = 0; i < m->nu; i++)
-        {
-            int joint_id = m->actuator_trnid[2*i];
-            int qpos_adr = m->jnt_qposadr[joint_id];
-            d->ctrl[i] = d->qpos[qpos_adr];
-        }
+        // for(int i = 0; i < m->nu; i++)
+        // {
+        //     int joint_id = m->actuator_trnid[2*i];
+        //     int qpos_adr = m->jnt_qposadr[joint_id];
+        //     d->ctrl[i] = d->qpos[qpos_adr];
+        // }
     }
 }
 
@@ -135,7 +135,9 @@ int main(int argc, char **argv)
     // create scene and context
     mjv_makeScene(m, &scn, 2000);
     mjr_makeContext(m, &con, mjFONTSCALE_150);
-
+    // 打开关节显示
+    // opt.flags[mjVIS_JOINT] = 1;
+    // opt.flags[mjVIS_ACTUATOR] = 1;   // 可选：看执行器  
     // install GLFW mouse and keyboard callbacks
     glfwSetKeyCallback(window, keyboard);
     glfwSetCursorPosCallback(window, mouse_move);

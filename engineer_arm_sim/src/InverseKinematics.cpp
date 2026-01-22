@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define delta 3e-2
+#define delta 3e-1
 #define thelta 1e-4
 #include<stdbool.h>
 #include <iostream> 
@@ -33,10 +33,14 @@ bool control = false;
 int CCOUNT = 0;
 int N = 50000;
 double epsilon = 1e-3;
+double k_bias = 0.15;
 static VectorXd q_des(6);
 static bool inited = false;
-
+VectorXd q_bias(6);
 MatrixXd JAC(6, 6);
+vector<string> joint_names = {
+		"joint1","joint2","joint3","joint4","joint5","joint6"
+};
 MatrixXd JacobianMatrix(const mjModel* m, mjData* d)
 {
 	// 计算全局雅可比
@@ -46,9 +50,7 @@ MatrixXd JacobianMatrix(const mjModel* m, mjData* d)
 	mj_jacBody(m, d, jacp.data(), jacr.data(), panda_link7_body_id);
 
 	// link 的 6 个关节名称
-	vector<string> joint_names = {
-		"joint1","joint2","joint3","joint4","joint5","joint6"
-	};
+	
 
 	// 提取每个关节的 qvel 索引
 	vector<int> qvel_ids(6);
@@ -77,6 +79,13 @@ MatrixXd pseudo_inverse(const MatrixXd& A)
 	MatrixXd pseudo_inverse_A = cod.pseudoInverse();
 	return pseudo_inverse_A;
 }
+MatrixXd damped_pinv(const MatrixXd& J, double lambda)
+{
+    int m = J.rows();
+    MatrixXd I = MatrixXd::Identity(m, m);
+    return J.transpose() * (J * J.transpose() + lambda * lambda * I).inverse();
+}
+
 
 void endeffector_control_keyboard(GLFWwindow* window)
 {
@@ -160,20 +169,40 @@ void endeffector_controller(const mjModel* m, mjData* d)
 	* 4. 计算$$\Delta\theta = J^* (\theta) * \Delta x$$，其中的$$\Delta x$$是direction在单位化后乘一个足够小的数字。
 	* 5. 通过d->ctrl控制机械臂关节运动。
 	************************************************************************************/
-	if (!inited) {
+	VectorXd dq_bias(6);
+
+if (!inited) {
     for (int i = 0; i < 6; i++) {
-        int jid = m->actuator_trnid[2*i];
-        int qadr = m->jnt_qposadr[jid];
-        q_des(i) = d->qpos[qadr];
+        int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());
+        int qid = m->jnt_qposadr[jid];
+        q_des[i] = d->qpos[qid];
     }
     inited = true;
-	}
-	MatrixXd M(6, 6);
-	M= pseudo_inverse(JacobianMatrix(m, d));
-	VectorXd v2(6);
-	v2= M * (keyboard_to_direction());
+}
+
+	q_bias << 0.0, 0.5, -0.8, 0.0, 0.0, 0.0;
+
+for (int i = 0; i < 6; i++) {
+    int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());
+    int qid = m->jnt_qposadr[jid];
+    dq_bias[i] = -k_bias * (d->qpos[qid] - q_bias[i]);
+}
+	MatrixXd J = JacobianMatrix(m, d);
+	MatrixXd I = MatrixXd::Identity(6, 6);
+	MatrixXd M = damped_pinv(J, 0.01);
+	MatrixXd N = I - M * J;
+	VectorXd dq_task = M * keyboard_to_direction();
+	VectorXd dq = dq_task*delta + N * dq_bias;
+	double maxstep = 0.05;
+ 	if (dq.norm() > maxstep)
+     	dq = dq.normalized() * maxstep;
 	for(int i=0;i<6;i++){
-		q_des[i]+=delta*v2(i);
+		q_des[i]+=dq(i);
 		d->ctrl[i]=q_des[i];
 	}
+	cout << "dq_task = " << dq_task.norm()
+     << " null = " << (N * dq_bias).norm()
+     << " detJ = " << JacobianMatrix(m,d).determinant()
+     << endl;
+
 }
