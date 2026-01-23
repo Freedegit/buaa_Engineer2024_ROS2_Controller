@@ -15,7 +15,7 @@ Class_PID pos_pid[6];
 Class_PID vel_pid[6];
 
 /**
- * @brief motor PID controller
+ * @brief motor  PID controller
 */
 void motor_PID_controller()
 {

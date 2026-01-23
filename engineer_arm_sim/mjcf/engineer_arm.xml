@@ -31,7 +31,7 @@
                 <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                 <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>
                 <inertial pos="0.0560009 -6.1835e-05 -0.00164064" quat="-0.00114916 0.690741 -0.00202277 0.723099" mass="1.27101" diaginertia="0.00695093 0.0063972 0.00206677" />
-                <joint name="joint1"  pos="0 0 0" axis="-1 0 0"  damping='20'/>
+                <joint name="joint1"  pos="0 0 0" axis="-1 0 0"  damping='0.2'/>
                 <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link1" />
                 <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link1" /> -->
                 <body name="link2" pos="0.065 0 0.0145" quat="0.5 0.5 -0.5 0.5">
@@ -49,7 +49,7 @@
                         <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                         <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>
                         <inertial pos="0.0328573 0.000118784 -0.187894" quat="0.811502 0.0435992 0.0615724 0.579458" mass="0.513825" diaginertia="0.0256099 0.0255955 0.00023995" />
-                        <joint name="joint3"  pos="0 0 0" axis="-1 0 0"  damping='10'/>
+                        <joint name="joint3"  pos="0 0 0" axis="-1 0 0"  damping='1'/>
                         <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link3" />
                         <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link3" /> -->
                         <body name="link4" pos="0.0112 0 -0.24">
@@ -58,7 +58,7 @@
                             <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                             <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>                            
                             <inertial pos="-0.0321935 -0.00380224 -0.000173813" quat="0.514831 0.540679 0.45861 0.481968" mass="0.350379" diaginertia="0.000571153 0.000556075 0.000174272" />
-                            <joint name="joint4" pos="0 0 0" axis="-1 0 0"  damping='1'/>
+                            <joint name="joint4" pos="0 0 0" axis="-1 0 0"  damping='5'/>
                             <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link4" />
                             <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link4" /> -->
                             <body name="link5" pos="-0.035 -0.03 0" quat="0.707107 0 0 -0.707107">
@@ -67,7 +67,7 @@
                                 <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                                 <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>                            
                                 <inertial pos="0.0331935 -0.000173813 -0.00380224" quat="0.0164138 0.666211 0.0180357 0.745364" mass="0.350379" diaginertia="0.000594173 0.000579075 0.000174253" />
-                                <joint name="joint5"  pos="0 0 0" axis="-1 0 0"  damping='1'/>
+                                <joint name="joint5"  pos="0 0 0" axis="-1 0 0"  damping='2'/>
                                 <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link5" />
                                 <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link5" /> -->
                                 <body name="link6" pos="0.036 0 -0.083" quat="0.5 0.5 0.5 -0.5">
@@ -93,12 +93,12 @@
         <!-- <key name="home" qpos="0.5 -0.3 0.6 -0.6 0.35 0.1"/> -->
     <!-- </keyframe> -->
     <actuator>
-        <position joint="joint1" kp="1700" ctrllimited="true" ctrlrange="-3.14 3.14"/>
-        <position joint="joint2" kp="1500" ctrllimited="true" ctrlrange="-3.14 3.14"/>
-        <position joint="joint3" kp="1200" ctrllimited="true" ctrlrange="-3.14 3.14"/>
-        <position joint="joint4" kp="70" ctrllimited="true" ctrlrange="-3.14 3.14"/>
-        <position joint="joint5" kp="50" ctrllimited="true" ctrlrange="-3.14 3.14"/>
-        <position joint="joint6" kp="10" ctrllimited="true" ctrlrange="-3.14 3.14"/>
+        <motor gear="50000" joint="joint1" name="motor1" ctrllimited="true"  ctrlrange='-90 90'/>
+        <motor gear="2000" joint="joint2" name="motor2" ctrllimited="true"  ctrlrange='-90 90'/>
+        <motor gear="200" joint="joint3" name="motor3" ctrllimited="true"  ctrlrange='-36 36'/>
+        <motor gear="100" joint="joint4" name="motor4" ctrllimited="true"  ctrlrange='-6 6'/>
+        <motor gear="100" joint="joint5" name="motor5" ctrllimited="true"  ctrlrange='-6 6'/>
+        <motor gear="100" joint="joint6" name="motor6" ctrllimited="true"  ctrlrange='-6 6'/>
     </actuator>
 
 

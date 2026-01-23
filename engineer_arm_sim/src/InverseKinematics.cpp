@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define delta 3e-1
+#define delta 3
 #define thelta 1e-4
 #include<stdbool.h>
 #include <iostream> 
@@ -33,7 +33,7 @@ bool control = false;
 int CCOUNT = 0;
 int N = 50000;
 double epsilon = 1e-3;
-double k_bias = 0.15;
+double k_bias = 0.3;
 static VectorXd q_des(6);
 static bool inited = false;
 VectorXd q_bias(6);
@@ -180,7 +180,7 @@ if (!inited) {
     inited = true;
 }
 
-	q_bias << 0.0, 0.5, -0.8, 0.0, 0.0, 0.0;
+	q_bias << 0.1, -0.5, 0.8, 0.0, 0.0, 0.0;
 
 for (int i = 0; i < 6; i++) {
     int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());
@@ -192,17 +192,23 @@ for (int i = 0; i < 6; i++) {
 	MatrixXd M = damped_pinv(J, 0.01);
 	MatrixXd N = I - M * J;
 	VectorXd dq_task = M * keyboard_to_direction();
-	VectorXd dq = dq_task*delta + N * dq_bias;
-	double maxstep = 0.05;
+	VectorXd dq;
+	if (dq_task.norm() < 1e-4) {
+    dq = dq_task;   // 禁止 null 干扰
+	} 
+	else {
+    dq = dq_task + N * dq_bias;
+	}
+	double maxstep = 0.1;
  	if (dq.norm() > maxstep)
      	dq = dq.normalized() * maxstep;
 	for(int i=0;i<6;i++){
 		q_des[i]+=dq(i);
 		d->ctrl[i]=q_des[i];
 	}
-	cout << "dq_task = " << dq_task.norm()
-     << " null = " << (N * dq_bias).norm()
-     << " detJ = " << JacobianMatrix(m,d).determinant()
-     << endl;
+	// cout << "dq_task = " << dq_task.norm()
+    //  << " null = " << (N * dq_bias).norm()
+    //  << " detJ = " << JacobianMatrix(m,d).determinant()
+    //  << endl;
 
 }

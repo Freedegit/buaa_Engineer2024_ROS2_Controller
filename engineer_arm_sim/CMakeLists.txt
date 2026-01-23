@@ -66,7 +66,8 @@ add_executable(sim
                   src/alg_pid.cpp
                   src/ROS2_controller_thread.cpp 
                   src/sim.cpp
-                  src/InverseKinematics.cpp)
+                  src/InverseKinematics.cpp
+                  src/ForwardKinematics.cpp)
 ament_target_dependencies(sim rclcpp ament_index_cpp engineer_msg)
 # add_dependencies(sim ROS2_controller_thread alg_pid drv_math)
 link_directories(${MUJOCO_LIB_DIR})

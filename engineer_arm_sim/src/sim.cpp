@@ -27,16 +27,10 @@ void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
     // backspace: reset simulation
     if( act==GLFW_PRESS && key==GLFW_KEY_BACKSPACE )
     {
-        // mj_resetDataKeyframe(m, d, 0);   // ✅ 回到 home pose
+        // mj_resetDataKeyframe(m, d, 0);   // 回到 home pose
         mj_forward(m, d);
         mj_resetData(m,d);
-        // 顺便重新同步 ctrl
-        // for(int i = 0; i < m->nu; i++)
-        // {
-        //     int joint_id = m->actuator_trnid[2*i];
-        //     int qpos_adr = m->jnt_qposadr[joint_id];
-        //     d->ctrl[i] = d->qpos[qpos_adr];
-        // }
+     
     }
 }
 
@@ -145,20 +139,17 @@ int main(int argc, char **argv)
     glfwSetScrollCallback(window, scroll);
 
     //create a ROS2 controller thread
-    //std::thread ROS2_controller_thread(ROS2_controller_thread_func);
-    //ROS2_controller_thread.detach();
-    // ============ 初始化 position actuator target = 当前关节角 ============
-for(int i = 0; i < m->nu; i++)
-{
-    int joint_id = m->actuator_trnid[2*i];      // actuator -> joint
-    int qpos_adr = m->jnt_qposadr[joint_id];    // joint -> qpos index
-    d->ctrl[i] = d->qpos[qpos_adr];
-}
+    // std::thread ROS2_controller_thread(ROS2_controller_thread_func);
+    // ROS2_controller_thread.detach();
+
 
     while ( !glfwWindowShouldClose(window) ) {
         mjtNum simstart = d->time;
+        mjcb_control(m,d);
         endeffector_control_keyboard(window);
         endeffector_controller(m, d);
+        joint_control_keyboard(window);
+        joint_controller(m,d);
         // advance interactive simulation for 1/30 sec
         //  Assuming MuJoCo can simulate faster than real-time, which it usually can,
         //  this loop will finish on time for the next frame to be rendered at 30 fps.
