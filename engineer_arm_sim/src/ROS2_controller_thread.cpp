@@ -1,7 +1,7 @@
 // include rclcpp for ROS2
 #include "engineer_arm_sim/ROS2_controller_thread.hpp"
 #include "engineer_arm_sim/sim.hpp"
-
+#include <mutex>
 //init target pos of six joints
 double target_pos[6] = {0, 0, 0, 0, 0, 0};
 //init target vel of six joints
@@ -13,7 +13,7 @@ double target_torque[6] = {10, 0, 0, 0, 0, 0};
 Class_PID pos_pid[6];
 //init velocity PID class (controller) for six joints
 Class_PID vel_pid[6];
-
+std::mutex g_target_mutex;
 /**
  * @brief motor  PID controller
 */
@@ -81,6 +81,7 @@ void motor_MIT_controller()
 */
 void ROS2_JointCommand_callback(const engineer_msg::msg::JointCommand::SharedPtr msg)
 {
+    std::lock_guard<std::mutex> lock(g_target_mutex);
     //Set target position of six joints
     for(int i = 0; i < 6; i++) {
         target_pos[i] = msg->position[i];
@@ -124,6 +125,7 @@ void pos_control(const mjModel* m, mjData* d){
     // if (count % 1000 == 0) {
     //     target_pos[4] += 1.0f;
     // }
+    std::lock_guard<std::mutex> lock(g_target_mutex);
     for (int i = 0; i < 6; i++) {
         d->qpos[m->jnt_qposadr[i]] = target_pos[i];
     }

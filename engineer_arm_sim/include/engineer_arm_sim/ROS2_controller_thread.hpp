@@ -8,5 +8,5 @@
 #include "engineer_msg/msg/joint_command.hpp"
 #include <iostream>
 #include "engineer_arm_sim/alg_pid.h"
-
 void ROS2_controller_thread_func();
+void ROS2_JointCommand_callback(const engineer_msg::msg::JointCommand::SharedPtr msg);

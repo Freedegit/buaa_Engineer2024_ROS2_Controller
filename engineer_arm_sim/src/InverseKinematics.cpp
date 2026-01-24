@@ -13,7 +13,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include "engineer_arm_sim/ForwardKinematics.h"
-#include"engineer_arm_sim/InverseKinematics.h"
+#include "engineer_arm_sim/InverseKinematics.h"
 using namespace Eigen;
 using namespace std;
 bool key_up = false;
@@ -34,13 +34,8 @@ int CCOUNT = 0;
 int N = 50000;
 double epsilon = 1e-3;
 double k_bias = 0.3;
-static VectorXd q_des(6);
-static bool inited = false;
 VectorXd q_bias(6);
 MatrixXd JAC(6, 6);
-vector<string> joint_names = {
-		"joint1","joint2","joint3","joint4","joint5","joint6"
-};
 MatrixXd JacobianMatrix(const mjModel* m, mjData* d)
 {
 	// 计算全局雅可比
@@ -180,7 +175,7 @@ if (!inited) {
     inited = true;
 }
 
-	q_bias << 0.1, -0.5, 0.8, 0.0, 0.0, 0.0;
+	q_bias << 0, -0, 0.8, 0.0, 0.0, 0.0;
 
 for (int i = 0; i < 6; i++) {
     int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());

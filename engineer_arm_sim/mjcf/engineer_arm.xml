@@ -40,7 +40,7 @@
                     <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                     <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>
                     <inertial pos="-0.0154337 2.61446e-06 0.189044" quat="0.706837 0.018405 0.0183932 0.706897" mass="1.06003" diaginertia="0.0634036 0.0628541 0.00138825" />
-                    <joint name="joint2"  pos="0 0 0" axis="-1 0 0"  damping='100'/>
+                    <joint name="joint2"  pos="0 0 0" axis="-1 0 0"  damping='1000'/>
                     <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link2" />
                     <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link2" /> -->
                     <body name="link3" pos="0.0093 0 0.325" quat="0 -1 0 0">
@@ -49,7 +49,7 @@
                         <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                         <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>
                         <inertial pos="0.0328573 0.000118784 -0.187894" quat="0.811502 0.0435992 0.0615724 0.579458" mass="0.513825" diaginertia="0.0256099 0.0255955 0.00023995" />
-                        <joint name="joint3"  pos="0 0 0" axis="-1 0 0"  damping='1'/>
+                        <joint name="joint3"  pos="0 0 0" axis="-1 0 0"  damping='10'/>
                         <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link3" />
                         <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link3" /> -->
                         <body name="link4" pos="0.0112 0 -0.24">

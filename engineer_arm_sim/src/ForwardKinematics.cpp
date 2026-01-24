@@ -53,13 +53,14 @@ void init_model()
 void arm_go_home(const mjModel* m, mjData* d)
 {
 	// 回家函数：让机械臂回到最开始的位置。这个位置是预先定义好的，可以任意修改。
-	d->ctrl[0] = 0.0;
-	d->ctrl[1] = -0.785;
-	d->ctrl[2] = 0.0;
-	d->ctrl[3] = -2.356;
-	d->ctrl[4] = 0.0;
-	d->ctrl[5] = 2.356;
-	d->ctrl[6] = 0.785;
+	VectorXd q_home(6);
+    q_home << 0.0, -0.785, 0.0, -2.356, 0.0, 2.356;
+	for(int i=0;i<6;i++)
+    // 同步三者：
+    q_des[i] = q_home(i);
+
+    for (int i = 0; i < 6; i++)
+        d->ctrl[i] = q_des[i];
 }
 
 void joint_control_keyboard(GLFWwindow* window)
@@ -103,36 +104,50 @@ void joint_controller(const mjModel* m, mjData* d)
 	* 4. 允许机械臂回到最初的位置。
 	*		按下键盘h，机械臂回到默认位置。
 	************************************************************************************/
+if (!inited) {
+    for (int i = 0; i < 6; i++) {
+        int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());
+        int qid = m->jnt_qposadr[jid];
+        q_des[i] = d->qpos[qid];
+    }
+    inited = true;
+}
+
     double k =0.05;
 	double delta;
-	
 	if (control)
 		delta = -k;
 	else
 		delta = k;
 	if (key_1)
 	{
-		d->ctrl[0] += delta;
+		q_des[0] += delta;
+		d->ctrl[0] = q_des[0];
 	}
 	if (key_2)
 	{
-		d->ctrl[1] += delta;
+		q_des[1] += delta;
+		d->ctrl[1] = q_des[1];
 	}
 	if (key_3)
 	{
-		d->ctrl[2] += delta;
+		q_des[2] += delta;
+		d->ctrl[2] = q_des[2];
 	}
 	if (key_4)
 	{
-		d->ctrl[3] += delta;
+		q_des[3] += delta;
+		d->ctrl[3] = q_des[3];
 	}
 	if (key_5)
 	{
-		d->ctrl[4] += delta;
+		q_des[4] += delta;
+		d->ctrl[4] = q_des[4];
 	}
 	if (key_6)
 	{
-		d->ctrl[5] += delta;
+		q_des[5] += delta;
+		d->ctrl[5] = q_des[5];
 	}
     if (home)
 		arm_go_home(m, d);

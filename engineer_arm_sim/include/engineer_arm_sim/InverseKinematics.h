@@ -24,4 +24,7 @@ VectorXd inverse_kinematics(const mjModel* m, mjData* d, VectorXd& target_pos);
 void endeffector_control_keyboard(GLFWwindow* window);
 void endeffector_controller(const mjModel* m, mjData* d);
 
+extern double q_des[6];
+extern bool inited;
+extern vector<string> joint_names;
 #endif // INVERSE_KINEMATICS_H
