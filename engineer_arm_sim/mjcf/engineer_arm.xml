@@ -40,7 +40,7 @@
                     <geom type="capsule" fromto="0 0 0   0 0.12 0" size="0.005" rgba="0 1 0 1"/>
                     <geom type="capsule" fromto="0 0 0   0 0 0.12" size="0.005" rgba="0 0 1 1"/>
                     <inertial pos="-0.0154337 2.61446e-06 0.189044" quat="0.706837 0.018405 0.0183932 0.706897" mass="1.06003" diaginertia="0.0634036 0.0628541 0.00138825" />
-                    <joint name="joint2"  pos="0 0 0" axis="-1 0 0"  damping='1000'/>
+                    <joint name="joint2"  pos="0 0 0" axis="-1 0 0"  damping='20'/>
                     <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.898039 0.917647 0.929412 1" mesh="link2" />
                     <!-- <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="link2" /> -->
                     <body name="link3" pos="0.0093 0 0.325" quat="0 -1 0 0">
@@ -94,7 +94,7 @@
     <!-- </keyframe> -->
     <actuator>
         <motor gear="50000" joint="joint1" name="motor1" ctrllimited="true"  ctrlrange='-90 90'/>
-        <motor gear="2000" joint="joint2" name="motor2" ctrllimited="true"  ctrlrange='-90 90'/>
+        <motor gear="1000" joint="joint2" name="motor2" ctrllimited="true"  ctrlrange='-90 90'/>
         <motor gear="200" joint="joint3" name="motor3" ctrllimited="true"  ctrlrange='-36 36'/>
         <motor gear="100" joint="joint4" name="motor4" ctrllimited="true"  ctrlrange='-6 6'/>
         <motor gear="100" joint="joint5" name="motor5" ctrllimited="true"  ctrlrange='-6 6'/>

@@ -12,7 +12,6 @@ mjvCamera cam;                      // abstract camera
 mjvOption opt;                      // visualization options
 mjvScene scn;                       // abstract scene
 mjrContext con;                     // custom GPU context
-extern double target_pos[6];
 // mouse interaction
 bool button_left = false;
 bool button_middle = false;
@@ -101,10 +100,6 @@ int main(int argc, char **argv)
     puts("MuJoCo simulation started");
     // Initialize MuJoCo
     // mj_activate("your_license_key_path");
-    // rclcpp::init(argc, argv);
-    // auto node = rclcpp::Node::make_shared("engineer_arm_sim");
-    // auto joint_state_pub = node->create_publisher<engineer_msg::msg::JointState>("joint_state", 10);
-    // auto joint_command_sub = node->create_subscription<engineer_msg::msg::JointCommand>("joint_command", 10, ROS2_JointCommand_callback);
 
     std::string xml_path = ament_index_cpp::get_package_share_directory("engineer_arm_sim") + "/mjcf/engineer_arm.xml";
     const char* xml_path_cstr = xml_path.c_str();
@@ -150,29 +145,17 @@ int main(int argc, char **argv)
     glfwSetScrollCallback(window, scroll);
 
     //create a ROS2 controller thread
-    // std::thread ROS2_controller_thread(ROS2_controller_thread_func);
-    // ROS2_controller_thread.detach();
+    std::thread ROS2_controller_thread(ROS2_controller_thread_func);
+    ROS2_controller_thread.detach();
 
 
     while ( !glfwWindowShouldClose(window) ) {
-        // rclcpp::spin_some(node);   // 👈 处理ROS回调（单线程）
-        mjtNum simstart = d->time;
         mjcb_control(m,d);
         endeffector_control_keyboard(window);
         endeffector_controller(m, d);
         joint_control_keyboard(window);
         joint_controller(m,d);
         VectorXd pos_now=get_body_pos(m,d,"link6");
-        printf("x:%f y:%f z:%f roll:%f pitch:%f yaw:%f\n",pos_now(0),pos_now(1),pos_now(2),pos_now(3),pos_now(4),pos_now(5));
-        static double t = 0;
-        t += 0.01;
-        target_pos[0] = 3.14 * sin(t);
-        target_pos[1] = 0.5 * sin(t);
-        target_pos[2] = 0.5 * sin(t);
-        target_pos[3] = 0;
-        target_pos[4] = 0;
-        target_pos[5] = 0;
-        // advance interactive simulation for 1/30 sec
         //  Assuming MuJoCo can simulate faster than real-time, which it usually can,
         //  this loop will finish on time for the next frame to be rendered at 30 fps.
         //  Otherwise add a cpu timer and exit this loop when it is time to render.

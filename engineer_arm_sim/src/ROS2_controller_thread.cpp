@@ -7,8 +7,8 @@ double target_pos[6] = {0, 0, 0, 0, 0, 0};
 //init target vel of six joints
 double target_vel[6] = {0, 0, 0, 0, 0, 0};
 //init target torque of six joints
-double target_torque[6] = {10, 0, 0, 0, 0, 0};
-
+double target_torque[6] = {0, 0, 0, 0, 0, 0};
+static double q_cmd[6] = {0};
 //init position PID class (controller) for six joints
 Class_PID pos_pid[6];
 //init velocity PID class (controller) for six joints
@@ -108,7 +108,7 @@ void ROS2_JointState_publisher(std::shared_ptr<rclcpp::Publisher<engineer_msg::m
     auto joint_state_msg = std::make_shared<engineer_msg::msg::JointState>();
     joint_state_msg->header.stamp = rclcpp::Clock().now();
     joint_state_msg->header.frame_id = "engineer_arm";
-    for (int i = 0; i < m->njnt; i++) {
+    for (int i = 0; i < 6; i++) {
         joint_state_msg->position[i] = d->qpos[m->jnt_qposadr[i]];
         joint_state_msg->velocity[i] = d->qvel[m->jnt_dofadr[i]];
         joint_state_msg->torque[i] = d->qfrc_applied[m->jnt_dofadr[i]];
@@ -120,15 +120,31 @@ void ROS2_JointState_publisher(std::shared_ptr<rclcpp::Publisher<engineer_msg::m
  * @brief motor position controller
 */
 void pos_control(const mjModel* m, mjData* d){
-    // static int count = 0;
-    // count++;
-    // if (count % 1000 == 0) {
-    //     target_pos[4] += 1.0f;
-    // }
+    static int count = 0;
+    count++;
     std::lock_guard<std::mutex> lock(g_target_mutex);
-    for (int i = 0; i < 6; i++) {
-        d->qpos[m->jnt_qposadr[i]] = target_pos[i];
+    static bool inited = false;
+
+    if(!inited && m && d) {
+        for(int i=0;i<6;i++)
+            q_cmd[i] = d->qpos[m->jnt_qposadr[i]];
+        inited = true;
     }
+    for(int i=0;i<6;i++){
+        double err = target_pos[i] - q_cmd[i];
+        double step = 0.001;// 每帧最大变化量（调小更稳）
+        if (fabs(err) > step)
+            q_cmd[i] += step * (err > 0 ? 1 : -1);
+        else
+            q_cmd[i] = target_pos[i];
+        // if(count%10000==0) {
+        //     printf("target:%f %f %f %f %f %f\n",target_pos[0],target_pos[1],target_pos[2],target_pos[3],target_pos[4],target_pos[5]);
+        //     printf("now:%f %f %f %f %f %f\n",q_cmd[0],q_cmd[1],q_cmd[2],q_cmd[3],q_cmd[4],q_cmd[5]);
+        
+        // }
+        d->qpos[m->jnt_qposadr[i]] = q_cmd[i];
+
+}
 }
 //由于mujoco中使用PID控制和MIT控制的效果都不好，而且只需要做运动学仿真，所以暂时直接设置仿真中的关节角度
 void (*mjcb_control)(const mjModel* m, mjData* d) = pos_control;
@@ -167,10 +183,10 @@ void ROS2_controller_thread_func()
     //ROS2 controller timer, 1ms
     
     //由于由于mujoco中使用PID控制和MIT位置控制的效果都不好，所以放弃使用基于力学的控制器，直接设置关节角度
-    // auto controller_timer = node->create_wall_timer(std::chrono::milliseconds(1), motor_position_controller);
+    auto controller_timer = node->create_wall_timer(std::chrono::milliseconds(1), []() { if(m && d){ pos_control(m, d); }});
 
     //ROS2 JointState Publish Timer, 20ms
-    auto joint_state_pub_timer = node->create_wall_timer(std::chrono::milliseconds(20), [joint_state_pub]() -> void {ROS2_JointState_publisher(joint_state_pub);});
+    // auto joint_state_pub_timer = node->create_wall_timer(std::chrono::milliseconds(20), [joint_state_pub]() -> void {ROS2_JointState_publisher(joint_state_pub);});
 
     // ROS2 spin
     rclcpp::spin(node);

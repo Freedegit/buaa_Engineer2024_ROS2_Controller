@@ -227,8 +227,8 @@ int main()
         "robotarm_state", 10, RobotArmStateCallback);
 
     // initialize a ROS2 publisher to publish the joint angles
-    joint_command_publisher = node->create_publisher<engineer_msg::msg::JointCommand>(
-        "joint_command", 10);
+    // joint_command_publisher = node->create_publisher<engineer_msg::msg::JointCommand>(
+    //     "joint_command", 10);
     
     // initialize a ROS2 publisher to publish the now end effector
     end_effector_publisher = node->create_publisher<engineer_msg::msg::EndEffector>(

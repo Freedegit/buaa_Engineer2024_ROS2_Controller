@@ -5,3 +5,4 @@
 
 extern mjModel* m ;                  // MuJoCo model
 extern mjData* d;                   // MuJoCo data
+extern double target_pos[6];

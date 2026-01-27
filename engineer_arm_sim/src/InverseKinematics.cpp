@@ -14,6 +14,7 @@
 #include <vector>
 #include "engineer_arm_sim/ForwardKinematics.h"
 #include "engineer_arm_sim/InverseKinematics.h"
+#include"engineer_arm_sim/sim.hpp"
 using namespace Eigen;
 using namespace std;
 bool key_up = false;
@@ -22,6 +23,7 @@ bool key_left = false;
 bool key_right = false;
 bool key_forward = false;
 bool key_back = false;
+bool key_I=false;
 bool control = false;
 /************************************************************************************
 * 在这里定义全局变量。
