@@ -17,15 +17,13 @@ std::mutex g_target_mutex;
 /**
  * @brief motor  PID controller
 */
-void motor_PID_controller()
+void motor_PID_controller(const mjModel* m, mjData* d)
 {
     // static int count = 0;
     // count++;
     // if (count % 1000 == 0) {
     //     target_pos[1] += 3.1416;
     // }
-    
-    // get target position and real position of six joint and calculate position PID
     for (int i = 0; i < 6; i++) {
         // calculate position PID
         pos_pid[i].Set_Target(target_pos[i]);
@@ -57,11 +55,10 @@ void motor_PID_controller()
 /**
  * @brief motor MIT controller
 */
-void motor_MIT_controller()
+void motor_MIT_controller(const mjModel* m, mjData* d)
 {
-    double Kp[6] = {5.0, 2.0, 1.0, 0.05, 0.02, 0.02};
-    double Kd[6] = {5.0, 2.0, 1.0, 0.05, 0.02, 0.02};
-
+   double Kp[6] = {10000.0, 400.0, 20.0, 0.8, 3.2, 0.32};
+    double Kd[6] = {5.0, 5.0, 1.0, 0.05, 0.02, 0.02};
     for (int i = 0; i < 6; i++) {
         // get position error
         double pos_error = target_pos[i] - d->qpos[m->jnt_qposadr[i]];
@@ -94,6 +91,10 @@ void ROS2_JointCommand_callback(const engineer_msg::msg::JointCommand::SharedPtr
     for(int i = 0; i < 6; i++) {
         target_torque[i] = msg->torque[i];
     }
+    printf("ROS2 cmd: %f %f %f %f %f %f\n",
+    msg->position[0], msg->position[1], msg->position[2],
+    msg->position[3], msg->position[4], msg->position[5]);
+
 }
 
 /**
@@ -146,7 +147,7 @@ void pos_control(const mjModel* m, mjData* d){
 
 }
 }
-//由于mujoco中使用PID控制和MIT控制的效果都不好，而且只需要做运动学仿真，所以暂时直接设置仿真中的关节角度
+//由于mujoco中使用PID控制和MIT控制的效果都不好，而且只需要做运动学仿真，所以暂时直接设置仿真中的关节角度，在此处可选择mj_step中调用的控制器函数
 void (*mjcb_control)(const mjModel* m, mjData* d) = pos_control;
 
 /**
@@ -169,7 +170,20 @@ void ROS2_controller_thread_func()
     // vel_pid[3].Init(0.2f, 0.1f, 0.0f, 0.0f, 3.0f, 6.0f);
     // vel_pid[4].Init(0.1, 0.05, 0.0f, 0.0f, 3.0f, 6.0f);
     // vel_pid[5].Init(0.1, 0.05, 0.0f, 0.0f, 3.0f, 6.0f);
-
+    // static bool inited = false;
+    // if(!inited) { 
+    // // (K_P, K_I, K_D, K_F, I_Out_Max, Out_Max, D_T, Dead_Zone, I_Variable_Speed_A, I_Variable_Speed_B, I_Separate_Threshold, D_First) 
+    // //init position PID controllers
+    //     const double dt = m->opt.timestep;   // 一般是 0.002
+    //     pos_pid[0].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+    //     pos_pid[1].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+    //     pos_pid[2].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+    //     pos_pid[3].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+    //     pos_pid[4].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+    //     pos_pid[5].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE); 
+    // }
+    // inited = true;
+    // get target position and real position of six joint and calculate position PID
     // ROS2 node initialization
     rclcpp::init(0, nullptr);
     auto node = rclcpp::Node::make_shared("ROS2_controller_thread");
@@ -183,10 +197,10 @@ void ROS2_controller_thread_func()
     //ROS2 controller timer, 1ms
     
     //由于由于mujoco中使用PID控制和MIT位置控制的效果都不好，所以放弃使用基于力学的控制器，直接设置关节角度
-    auto controller_timer = node->create_wall_timer(std::chrono::milliseconds(1), []() { if(m && d){ pos_control(m, d); }});
+    // auto controller_timer = node->create_wall_timer(std::chrono::milliseconds(1), []() { if(m && d){ pos_control(m, d); }});
 
     //ROS2 JointState Publish Timer, 20ms
-    // auto joint_state_pub_timer = node->create_wall_timer(std::chrono::milliseconds(20), [joint_state_pub]() -> void {ROS2_JointState_publisher(joint_state_pub);});
+    auto joint_state_pub_timer = node->create_wall_timer(std::chrono::milliseconds(20), [joint_state_pub]() -> void {ROS2_JointState_publisher(joint_state_pub);});
 
     // ROS2 spin
     rclcpp::spin(node);

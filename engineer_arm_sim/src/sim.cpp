@@ -19,7 +19,7 @@ bool button_right =  false;
 double lastx = 0;
 double lasty = 0;
 // 期望关节角
-double q_des[6] = {0};
+// double q_des[6] = {0};
 vector<string> joint_names = {
     "joint1",
     "joint2",
@@ -150,11 +150,16 @@ int main(int argc, char **argv)
 
 
     while ( !glfwWindowShouldClose(window) ) {
-        mjcb_control(m,d);
+        mjtNum simstart = d->time;
+        
+        //键盘WASD控制末端执行器
         endeffector_control_keyboard(window);
         endeffector_controller(m, d);
+
+        //键盘数字键1-6控制各个关节
         joint_control_keyboard(window);
         joint_controller(m,d);
+        
         VectorXd pos_now=get_body_pos(m,d,"link6");
         //  Assuming MuJoCo can simulate faster than real-time, which it usually can,
         //  this loop will finish on time for the next frame to be rendered at 30 fps.

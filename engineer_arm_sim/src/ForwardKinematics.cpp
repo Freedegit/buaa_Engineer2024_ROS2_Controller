@@ -12,6 +12,7 @@
 #include <vector>
 #include "engineer_arm_sim/ForwardKinematics.h"
 #include "engineer_arm_sim/InverseKinematics.h"
+#include"engineer_arm_sim/sim.hpp"
 //#include "ScoreManager.h"
 using namespace Eigen;
 using namespace std;
@@ -54,13 +55,9 @@ void arm_go_home(const mjModel* m, mjData* d)
 {
 	// 回家函数：让机械臂回到最开始的位置。这个位置是预先定义好的，可以任意修改。
 	VectorXd q_home(6);
-    q_home << 0.0, -0.785, 0.0, -2.356, 0.0, 2.356;
-	for(int i=0;i<6;i++)
-    // 同步三者：
-    q_des[i] = q_home(i);
-
+    q_home << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
     for (int i = 0; i < 6; i++)
-        d->ctrl[i] = q_des[i];
+        target_pos[i] = q_home(i);
 }
 
 void joint_control_keyboard(GLFWwindow* window)
@@ -108,12 +105,12 @@ if (!inited) {
     for (int i = 0; i < 6; i++) {
         int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());
         int qid = m->jnt_qposadr[jid];
-        q_des[i] = d->qpos[qid];
+        target_pos[i] = d->qpos[qid];
     }
     inited = true;
 }
 
-    double k =0.05;
+    double k =0.01;
 	double delta;
 	if (control)
 		delta = -k;
@@ -121,33 +118,27 @@ if (!inited) {
 		delta = k;
 	if (key_1)
 	{
-		q_des[0] += delta;
-		d->ctrl[0] = q_des[0];
+		target_pos[0] += delta;
 	}
 	if (key_2)
 	{
-		q_des[1] += delta;
-		d->ctrl[1] = q_des[1];
+		target_pos[1] += delta;
 	}
 	if (key_3)
 	{
-		q_des[2] += delta;
-		d->ctrl[2] = q_des[2];
+		target_pos[2] += delta;
 	}
 	if (key_4)
 	{
-		q_des[3] += delta;
-		d->ctrl[3] = q_des[3];
+		target_pos[3] += delta;
 	}
 	if (key_5)
 	{
-		q_des[4] += delta;
-		d->ctrl[4] = q_des[4];
+		target_pos[4]+= delta;
 	}
 	if (key_6)
 	{
-		q_des[5] += delta;
-		d->ctrl[5] = q_des[5];
+		target_pos[5] += delta;
 	}
     if (home)
 		arm_go_home(m, d);

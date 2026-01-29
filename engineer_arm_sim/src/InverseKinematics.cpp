@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define delta 3
+#define delta 1e-1
 #define thelta 1e-4
 #include<stdbool.h>
 #include <iostream> 
@@ -154,6 +154,7 @@ VectorXd keyboard_to_direction()
 			v1(4) = -1;
 		}
 	}
+	if (v1.norm() > 1e-6)
 	v1.normalize();
 	return v1;
 }
@@ -172,7 +173,7 @@ if (!inited) {
     for (int i = 0; i < 6; i++) {
         int jid = mj_name2id(m, mjOBJ_JOINT, joint_names[i].c_str());
         int qid = m->jnt_qposadr[jid];
-        q_des[i] = d->qpos[qid];
+        target_pos[i]= d->qpos[qid];
     }
     inited = true;
 }
@@ -196,12 +197,11 @@ for (int i = 0; i < 6; i++) {
 	else {
     dq = dq_task + N * dq_bias;
 	}
-	double maxstep = 0.1;
+	double maxstep = 0.01;
  	if (dq.norm() > maxstep)
      	dq = dq.normalized() * maxstep;
 	for(int i=0;i<6;i++){
-		q_des[i]+=dq(i);
-		d->ctrl[i]=q_des[i];
+		target_pos[i]+=dq(i);
 	}
 	// cout << "dq_task = " << dq_task.norm()
     //  << " null = " << (N * dq_bias).norm()
