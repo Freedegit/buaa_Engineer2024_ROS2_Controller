@@ -100,6 +100,31 @@ int main(int argc, char **argv)
     puts("MuJoCo simulation started");
     // Initialize MuJoCo
     // mj_activate("your_license_key_path");
+    rclcpp::init(argc, argv);
+
+    rclcpp::NodeOptions options;
+    options.allow_undeclared_parameters(true);
+    options.automatically_declare_parameters_from_overrides(true);
+    auto sim_node = rclcpp::Node::make_shared(
+        "sim_node",
+        options
+    );
+    std::string type = "kinematic";   // 兜底默认值
+    if (sim_node->has_parameter("controller_type")) {
+        type = sim_node->get_parameter("controller_type").as_string();
+    }
+
+// 转成 enum
+    if (type == "pid")
+        g_controller_type = ControllerType::PID;
+    else if (type == "mit")
+        g_controller_type = ControllerType::MIT;
+    else
+        g_controller_type = ControllerType::KINEMATIC;
+    RCLCPP_INFO(
+        sim_node->get_logger(),
+        "Controller type = %s", type.c_str()
+    );
 
     std::string xml_path = ament_index_cpp::get_package_share_directory("engineer_arm_sim") + "/mjcf/engineer_arm.xml";
     const char* xml_path_cstr = xml_path.c_str();
@@ -145,7 +170,10 @@ int main(int argc, char **argv)
     glfwSetScrollCallback(window, scroll);
 
     //create a ROS2 controller thread
-    std::thread ROS2_controller_thread(ROS2_controller_thread_func);
+    std::thread ROS2_controller_thread(
+        static_cast<void(*)(rclcpp::Node::SharedPtr)>(ROS2_controller_thread_func),
+        sim_node 
+    );
     ROS2_controller_thread.detach();
 
 

@@ -12,3 +12,4 @@ void ROS2_controller_thread_func();
 void ROS2_JointCommand_callback(const engineer_msg::msg::JointCommand::SharedPtr msg);
 void motor_PID_controller();
 void motor_MIT_controller();
+void ROS2_controller_thread_func(rclcpp::Node::SharedPtr node);

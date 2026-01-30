@@ -6,14 +6,18 @@
 double target_pos[6] = {0, 0, 0, 0, 0, 0};
 //init target vel of six joints
 double target_vel[6] = {0, 0, 0, 0, 0, 0};
-//init target torque of six joints
-double target_torque[6] = {0, 0, 0, 0, 0, 0};
+//init target torque of six joints 
+double target_torque[6] = {100, 0, 0, 0, 0, 0};
 static double q_cmd[6] = {0};
 //init position PID class (controller) for six joints
 Class_PID pos_pid[6];
 //init velocity PID class (controller) for six joints
 Class_PID vel_pid[6];
 std::mutex g_target_mutex;
+
+
+ControllerType g_controller_type = ControllerType::KINEMATIC;
+
 /**
  * @brief motor  PID controller
 */
@@ -22,8 +26,26 @@ void motor_PID_controller(const mjModel* m, mjData* d)
     // static int count = 0;
     // count++;
     // if (count % 1000 == 0) {
-    //     target_pos[1] += 3.1416;
-    // }
+    //     target_pos[1] += 3.1416;    // }
+    static bool inited = false;
+    if(!inited) { 
+    // (K_P, K_I, K_D, K_F, I_Out_Max, Out_Max, D_T, Dead_Zone, I_Variable_Speed_A, I_Variable_Speed_B, I_Separate_Threshold, D_First) 
+    //init position PID controllers
+        const double dt = m->opt.timestep;   // 一般是 0.002
+        pos_pid[0].Init(5000.0f,0.0f,0.0f,0.0f,0.5f,0.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+        pos_pid[1].Init(1000.0f,0.0f,0.0f,0.0f,0.5f,0.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+        pos_pid[2].Init(500.0f,0.0f,0.0f,0.0f,0.5f,0.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+        pos_pid[3].Init(500.0f,0.0f,0.0f,0.0f,0.5f,0.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+        pos_pid[4].Init(500.0f,0.0f,0.0f,0.0f,0.5f,0.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
+        pos_pid[5].Init(800.0f,0.0f,0.0f,0.0f,0.5f,0.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE); 
+        vel_pid[0].Init(50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 2000.0f);
+        vel_pid[1].Init(50.0f, 0.0f, 0.0f, 0.0f, 0.0f, 120.0f);
+        vel_pid[2].Init(0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 15.0f);
+        vel_pid[3].Init(0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 6.0f);
+        vel_pid[4].Init(0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 15.0f);
+        vel_pid[5].Init(0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 6.0f);
+    }
+    inited = true;
     for (int i = 0; i < 6; i++) {
         // calculate position PID
         pos_pid[i].Set_Target(target_pos[i]);
@@ -147,14 +169,31 @@ void pos_control(const mjModel* m, mjData* d){
 
 }
 }
+void controller_dispatch(const mjModel* m, mjData* d)
+{
+    switch (g_controller_type) {
+    case ControllerType::PID:
+        motor_PID_controller(m, d);
+        break;
+
+    case ControllerType::MIT:
+        motor_MIT_controller(m, d);
+        break;
+
+    case ControllerType::KINEMATIC:
+        pos_control(m, d);
+        break;
+    }
+}
+
 //由于mujoco中使用PID控制和MIT控制的效果都不好，而且只需要做运动学仿真，所以暂时直接设置仿真中的关节角度，在此处可选择mj_step中调用的控制器函数
-void (*mjcb_control)(const mjModel* m, mjData* d) = pos_control;
+void (*mjcb_control)(const mjModel* m, mjData* d) = controller_dispatch;
 
 /**
  * @brief ROS2 controller thread function
  * 
 */
-void ROS2_controller_thread_func()
+void ROS2_controller_thread_func(rclcpp::Node::SharedPtr node)
 {
     // //init position PID contorllers
     // pos_pid[0].Init(6.0f, 0.0f, 0.0f, 0.0f, 0.0f, 8.0f);
@@ -170,23 +209,8 @@ void ROS2_controller_thread_func()
     // vel_pid[3].Init(0.2f, 0.1f, 0.0f, 0.0f, 3.0f, 6.0f);
     // vel_pid[4].Init(0.1, 0.05, 0.0f, 0.0f, 3.0f, 6.0f);
     // vel_pid[5].Init(0.1, 0.05, 0.0f, 0.0f, 3.0f, 6.0f);
-    // static bool inited = false;
-    // if(!inited) { 
-    // // (K_P, K_I, K_D, K_F, I_Out_Max, Out_Max, D_T, Dead_Zone, I_Variable_Speed_A, I_Variable_Speed_B, I_Separate_Threshold, D_First) 
-    // //init position PID controllers
-    //     const double dt = m->opt.timestep;   // 一般是 0.002
-    //     pos_pid[0].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
-    //     pos_pid[1].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
-    //     pos_pid[2].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
-    //     pos_pid[3].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
-    //     pos_pid[4].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE);
-    //     pos_pid[5].Init(1.0f,0.0f,0.0f,0.0f,0.5f,40.0f,dt,0.0f,0.0f,0.0f,0.0f,PID_D_First_DISABLE); 
-    // }
-    // inited = true;
     // get target position and real position of six joint and calculate position PID
     // ROS2 node initialization
-    rclcpp::init(0, nullptr);
-    auto node = rclcpp::Node::make_shared("ROS2_controller_thread");
     
     //ROS2 JointState publisher Initialization
     auto joint_state_pub = node->create_publisher<engineer_msg::msg::JointState>("joint_state", 10);
